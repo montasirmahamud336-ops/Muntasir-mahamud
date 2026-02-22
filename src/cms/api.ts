@@ -14,7 +14,21 @@ import {
 } from "@/cms/types";
 import { slugify } from "@/cms/utils";
 
-const CMS_BASE_URL = String(import.meta.env.VITE_CMS_BACKEND_URL || "http://localhost:4000").replace(/\/+$/, "");
+const inferCmsBaseUrl = () => {
+  if (typeof window === "undefined") {
+    return "http://localhost:4000";
+  }
+
+  const host = window.location.hostname;
+  const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "::1";
+  if (isLocalHost) {
+    return "http://localhost:4000";
+  }
+
+  return window.location.origin;
+};
+
+const CMS_BASE_URL = String(import.meta.env.VITE_CMS_BACKEND_URL || inferCmsBaseUrl()).replace(/\/+$/, "");
 const CMS_TOKEN_KEY = "cms_admin_token";
 
 export const slugToPath = (slug: string) => (slug === "home" ? "/" : `/${slug}`);
