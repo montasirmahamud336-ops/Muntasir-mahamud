@@ -9,42 +9,34 @@ declare global {
 
 export function SmoothScroll() {
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
 
-    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+    const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
     const lenis = new Lenis({
-      duration: isTouchDevice ? 0.9 : 1.15,
+      autoRaf: true,
+      duration: isTouchDevice ? 0.95 : 1.05,
+      lerp: isTouchDevice ? 0.08 : 0.1,
       smoothWheel: true,
-      wheelMultiplier: 0.9,
+      syncTouch: true,
+      syncTouchLerp: 0.085,
+      touchInertiaExponent: 1.2,
+      wheelMultiplier: 0.85,
       touchMultiplier: 1.0,
+      overscroll: false,
+      anchors: true,
+      allowNestedScroll: true,
     });
     window.__lenis = lenis;
 
-    let frameId = 0;
-
-    const raf = (time: number) => {
-      lenis.raf(time);
-      frameId = window.requestAnimationFrame(raf);
-    };
-
-    frameId = window.requestAnimationFrame(raf);
-
-    const handleVisibility = () => {
-      if (document.hidden) {
-        window.cancelAnimationFrame(frameId);
-        return;
-      }
-      frameId = window.requestAnimationFrame(raf);
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
       delete window.__lenis;
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.cancelAnimationFrame(frameId);
       lenis.destroy();
     };
   }, []);

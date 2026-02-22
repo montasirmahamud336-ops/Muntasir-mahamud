@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useSpring, useMotionValue } from "framer-motion";
 
 export function CursorGlow() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const hoveringRef = useRef(false);
+  const visibleRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -18,49 +21,74 @@ export function CursorGlow() {
   const outerY = useSpring(cursorY, outerSpringConfig);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      setIsVisible(true);
+    if (window.matchMedia("(prefers-reduced-motion: reduce), (hover: none), (pointer: coarse)").matches) {
+      return;
+    }
+
+    const updatePointer = (e: MouseEvent) => {
+      if (rafRef.current !== null) {
+        return;
+      }
+
+      rafRef.current = window.requestAnimationFrame(() => {
+        cursorX.set(e.clientX);
+        cursorY.set(e.clientY);
+        rafRef.current = null;
+      });
+
+      if (!visibleRef.current) {
+        visibleRef.current = true;
+        setIsVisible(true);
+      }
+
+      const target = e.target as HTMLElement | null;
+      const nextHovering = Boolean(
+        target &&
+          (target.tagName === "BUTTON" ||
+            target.tagName === "A" ||
+            target.closest("button") ||
+            target.closest("a") ||
+            target.classList.contains("cursor-pointer") ||
+            target.closest(".cursor-pointer")),
+      );
+
+      if (nextHovering !== hoveringRef.current) {
+        hoveringRef.current = nextHovering;
+        setIsHovering(nextHovering);
+      }
     };
 
     const handleMouseLeave = () => {
+      visibleRef.current = false;
       setIsVisible(false);
     };
 
     const handleMouseEnter = () => {
-      setIsVisible(true);
+      if (!visibleRef.current) {
+        visibleRef.current = true;
+        setIsVisible(true);
+      }
     };
 
-    // Detect hovering over interactive elements
-    const handleElementHover = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const isInteractive = 
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'A' ||
-        target.closest('button') ||
-        target.closest('a') ||
-        target.classList.contains('cursor-pointer') ||
-        target.closest('.cursor-pointer');
-      
-      setIsHovering(!!isInteractive);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mousemove", handleElementHover);
+    window.addEventListener("mousemove", updatePointer, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousemove", handleElementHover);
+      window.removeEventListener("mousemove", updatePointer);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
     };
   }, [cursorX, cursorY]);
 
   // Hide on mobile/touch devices
-  if (typeof window !== 'undefined' && 'ontouchstart' in window) {
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce), (hover: none), (pointer: coarse)").matches
+  ) {
     return null;
   }
 

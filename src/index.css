@@ -129,6 +129,25 @@
     @apply border-border;
   }
 
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: clip;
+  }
+
+  .lenis [data-lenis-prevent],
+  .lenis [data-lenis-prevent-wheel],
+  .lenis [data-lenis-prevent-touch] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+
   html {
     scroll-behavior: auto;
   }
@@ -140,7 +159,7 @@
       radial-gradient(circle at 18% -10%, hsl(var(--primary) / 0.14), transparent 34%),
       radial-gradient(circle at 82% -18%, hsl(var(--primary) / 0.09), transparent 36%),
       linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
-    background-attachment: fixed;
+    background-attachment: scroll;
     overflow-x: clip;
   }
 
@@ -406,6 +425,12 @@
 
   .card-3d:hover {
     transform: translateY(-2px);
+  }
+}
+
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  body {
+    background-attachment: fixed;
   }
 }
 

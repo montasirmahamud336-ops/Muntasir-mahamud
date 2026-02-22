@@ -1,9 +1,17 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 
 export function usePageSeo(title?: string | null, description?: string | null) {
   useEffect(() => {
-    if (title && title.trim()) {
-      document.title = title;
+    const siteName = "Muntasir Mahmud";
+    const cleanTitle = String(title || "").trim();
+    const normalized = cleanTitle.toLowerCase();
+
+    if (!cleanTitle || normalized === "lovable app") {
+      document.title = siteName;
+    } else if (normalized === siteName.toLowerCase()) {
+      document.title = siteName;
+    } else {
+      document.title = `${cleanTitle} | ${siteName}`;
     }
 
     if (description !== undefined && description !== null) {
