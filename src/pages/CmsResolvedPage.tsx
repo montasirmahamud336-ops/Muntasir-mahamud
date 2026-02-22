@@ -47,6 +47,8 @@ const legacySlugToTemplateKey: Record<string, string> = {
 };
 
 const pageCache = new Map<string, CmsPage | null>();
+const DEFAULT_SITE_TITLE = "Muntasir Mahmud";
+const DEFAULT_SITE_DESCRIPTION = "Muntasir Mahmud - Technical & Creative Freelancer Portfolio";
 
 const resolveFallback = (slug: string) => {
   const direct = templates[slug];
@@ -125,7 +127,10 @@ export default function CmsResolvedPage() {
     };
   }, [fallbackTemplate, slug]);
 
-  usePageSeo(page?.seo_title || page?.title || null, page?.meta_description || null);
+  usePageSeo(
+    page?.seo_title || page?.title || DEFAULT_SITE_TITLE,
+    page?.meta_description || DEFAULT_SITE_DESCRIPTION,
+  );
 
   if (redirectSlug) {
     return <Navigate to={slugToPath(redirectSlug)} replace />;
